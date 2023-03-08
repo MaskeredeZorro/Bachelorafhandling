@@ -91,17 +91,20 @@ def solveModel(model: pyomo.ConcreteModel()):
 def displaySolution(model: pyomo.ConcreteModel(), data: dict):
     print('Solution value is:', pyomo.value(model.obj))
 
+
+
     for v in model.y:
         if pyomo.value(model.y[v])==1:
             print(f"Der skal anvendes {pyomo.value(model.rho[v])} enheder af ventilhus {model.y[v]}")
 
 
     print("")
-    print('The following facilities are open:')
+    print('Følgende ventilhuse bliver anvendt i løsningen:')
     for v in model.ventilhus_længde:
         if pyomo.value(model.y[v]) == 1:
             print(model.ventilhus[v], end=',')
-    print('\nCustomers are covered as follows:')
+    print("")
+    print('\nProdukterne er dækket som følgende:')
     for p in model.produkter_længde:
         print(model.produkter[p],end=' ->\t')
         for v in model.ventilhus_længde:
