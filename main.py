@@ -1,4 +1,4 @@
-import pyomo.environ as pyomo       # Used to model the IP
+import pyomo.environ as pyomo  # Used to model the IP
 import readAndWriteJson as rwJson   # Used for reading the data file in Json format
 import matplotlib.pyplot as plt     # Used for plotting the result
 import random
@@ -46,16 +46,16 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     #Objektfunktionen tilføjes til modellen %%%%%%% Der er nogle produkters brug af ventilhuse som tvinger åbningen af ventilhuse, desværre. Og så kan de produkter som kan bruge det ventilhus som bliver tvunget åbent, lige så godt anvende det såfremt det er billigere at anvende.
     #Jeg har kørt en random efterspørgsel et par gange og den finder den samme løsning lige meget hvad... Den løsning som den også finder ved 54 ventilhuse... Måske noget som er værd at undersøge hvorfor det er sådan.
     #Glæder mig til vi får CO2e objektivet med ind over..
-    #model.obj=pyomo.Objective(
-        #expr=(sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
-            # +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)), sense=pyomo.minimize
-    #)
+    model.obj=pyomo.Objective(
+        expr=(sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
+             +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)), sense=pyomo.minimize
+    )
 
     #Anden objektfunktion tilføjes til modellen
-    model.obj=pyomo.Objective(
-        expr=sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
-             +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
-    )
+    #model.obj=pyomo.Objective(
+       # expr=sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
+            # +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
+    #)
 
 
     #Begræns brugen af ventilhuse så kun ventilhuse som passer til et produkt, kan tildeles til det produkt
@@ -102,8 +102,6 @@ def displaySolution(model: pyomo.ConcreteModel(), data: dict):
     #for v in model.ventilhus_længde:
         #print(pyomo.value(model.opstillingspris[v]*model.y[v]))
         #print(pyomo.value(model.rho[v] * model.indkøbspris[v]))
-    #for p in model.produkter_længde:
-        #print(pyomo.value(sum(model.x[v,p] for v in model.ventilhus_længde)))
 
     for v in model.y:
         if pyomo.value(model.y[v])==1:
@@ -121,7 +119,7 @@ def displaySolution(model: pyomo.ConcreteModel(), data: dict):
     for p in model.produkter_længde:
         print(model.produkter[p],end=' ->\t')
         for v in model.ventilhus_længde:
-            if model.a[v][p] == 1 and pyomo.value(model.y[v])==1:
+            if model.a[v][p] == 1 and pyomo.value(model.y[v])*pyomo.value(model.x[v,p])==1:
                 print(model.ventilhus[v], end=',')
         print('')
 
