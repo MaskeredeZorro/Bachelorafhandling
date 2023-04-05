@@ -32,7 +32,7 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     #model.delta=[data["demand"][i]*data["r"] for i in range(len(data["demand"]))] #sunes løsning er blevet replicated men med vores parameternavne
 
 
-    #Test print
+    ##Test print
     #print("Printing weights in kg")
     #for v in model.ventilhus_længde:
     #    print(model.w[v])
