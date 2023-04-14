@@ -13,5 +13,29 @@
     "kfm": 2.962,
     "K": 4.8,
     "kfsvinter": 143.5,
-    "kfssommer": 132
+    "kfssommer": 132,
+    "A": 0.75,
+    "Anvendteventilhuse": [1,0,1,1,1,1,1,0,0,0],
+    "Anvendteventilhuseomvendt": [-1,1,-1,-1,-1,-1,-1,1,1,1],
+
+    "Anvendteventilhuse2": [1,0,1,1,1,1,1,1,0,0],
+    "Anvendteventilhuseomvendt2": [-1,1,-1,-1,-1,-1,-1,-1,1,1],
+
+    "Anvendteventilhuse3": [1,0,1,1,1,1,1,0,1,0],
+    "Anvendteventilhuseomvendt3": [-1,1,-1,-1,-1,-1,-1,1,-1,1],
+
+    "Anvendteventilhuse4": [1,1,1,1,1,1,1,0,0,0],
+    "Anvendteventilhuseomvendt4": [-1,-1,-1,-1,-1,-1,-1,1,1,1],
+
+    "Anvendteventilhuse5": [1,0,1,1,1,1,1,1,1,0],
+    "Anvendteventilhuseomvendt5": [-1,1,-1,-1,-1,-1,-1,-1,-1,1],
+
+    "Anvendteventilhuse6": [1,1,1,1,1,1,1,1,0,0],
+    "Anvendteventilhuseomvendt6": [-1,-1,-1,-1,-1,-1,-1,-1,1,1],
+
+    "Anvendteventilhuse7": [1,1,1,1,1,1,1,0,1,0],
+    "Anvendteventilhuseomvendt7": [-1,-1,-1,-1,-1,-1,-1,1,-1,1],
+
+    "Anvendteventilhuse8": [1,1,1,1,1,1,1,1,1,0],
+    "Anvendteventilhuseomvendt8": [-1,-1,-1,-1,-1,-1,-1,-1,-1,1]
 }
