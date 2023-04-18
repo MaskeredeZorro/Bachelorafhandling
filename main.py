@@ -35,7 +35,7 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     #tilfældig efterspørgselsniveauer:
     #model.efterspørgsel = [data["demand"][v] * random.randint(1, 1000000) for v in range(0, len(data["demand"]))]
     model.r = data["r"]
-    model.a=data["a2"]
+    model.a=data["a"]
     model.A=data["A"]
     model.w=[data["w"][v]/1000 for v in range(0, len(model.ventilhus))]
     model.K = data["K"]
@@ -86,10 +86,10 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     #Objektfunktionen tilføjes til modellen %%%%%%% Der er nogle produkters brug af ventilhuse som tvinger åbningen af ventilhuse, desværre. Og så kan de produkter som kan bruge det ventilhus som bliver tvunget åbent, lige så godt anvende det såfremt det er billigere at anvende.
     #Jeg har kørt en random efterspørgsel et par gange og den finder den samme løsning lige meget hvad... Den løsning som den også finder ved 54 ventilhuse... Måske noget som er værd at undersøge hvorfor det er sådan.
     #Glæder mig til vi får CO2e objektivet med ind over..
-    #model.obj=pyomo.Objective(
-    #    expr=sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
-    #         +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
-    #)
+    model.obj=pyomo.Objective(
+        expr=sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
+             +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
+    )
 
     #Anden objektfunktion tilføjes til modellen
     #model.obj=pyomo.Objective(
@@ -107,12 +107,12 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
 
 
     #Fjerde objektfunktion - omkostninger og CO2e udledninger i en samlet for at lave no good inequality
-    model.obj=pyomo.Objective(
-        expr=sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
-             +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
-             +sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
-             +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
-    )
+    #model.obj=pyomo.Objective(
+    #    expr=sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
+    #         +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
+    #         +sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
+    #         +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
+    #)
 
     #Begræns brugen af ventilhuse så kun ventilhuse som passer til et produkt, kan tildeles til det produkt
     #Begrænsningen tager ikke højde for, at hvis der ikke er efterspørgsel så skal et produkt ikke dækkes.
