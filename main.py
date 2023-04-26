@@ -17,7 +17,7 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     model.opstillingspris = data["fixed_cost"]
     model.indkøbspris=data["var_cost"]
     model.produktionstid = [data["produktionstid"][v]/60/60 for v in range(0, len(model.ventilhus))]
-    model.efterspørgsel = data["demandsommer"]
+    model.efterspørgsel = data["demandvinter"]
     model.r = data["r"]
     model.delta=[model.efterspørgsel[v]*model.r[v] for v in range(0, len(model.efterspørgsel))]
     model.a=data["a2"]
@@ -25,7 +25,7 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     model.w=[data["w"][v]/1000 for v in range(0, len(model.ventilhus))]
     model.K = data["K"]
     model.kfm = data["kfm"]
-    model.kfs = data["kfssommer"]/1000
+    model.kfs = data["kfsvinter"]/1000
 
     #No good inequality:
     model.YV1=data["Anvendteventilhuse"]
@@ -66,9 +66,9 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
         )
 
     #Minimering af omkostninger (1.)
-    #model.obj=pyomo.Objective(
-    #    expr=sum(model.opstillingspris[v]*model.y[v] + model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
-    #)
+    model.obj=pyomo.Objective(
+        expr=sum(model.opstillingspris[v]*model.y[v] + model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
+    )
 
     #Minimering af CO2e udledninger (2.)
     #model.obj=pyomo.Objective(
