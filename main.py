@@ -1,7 +1,5 @@
 import pyomo.environ as pyomo       # Used to model the IP
 import readAndWriteJson as rwJson   # Used for reading the data file in Json format
-import matplotlib.pyplot as plt     # Used for plotting the result
-import random
 
 
 def readData(filename: str) -> dict:
@@ -16,31 +14,20 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     #Parametrene defineres i modellen
     model.ventilhus = data["ventilhus"]
     model.produkter = data["produkter"]
-    #anvend ved følsomhedsanalyse:
-    #model.opstillingspris = [data["fixed_cost"][v]*0.6 for v in range(0, len(model.ventilhus))]
-    #anvend ved løsning:
     model.opstillingspris = data["fixed_cost"]
-    #anvend ved følsomhedsanalyse:
-    #model.indkøbspris = [data["var_cost"][v]*0.6 for v in range(0, len(model.ventilhus))]
-    #anvend ved løsning:
     model.indkøbspris=data["var_cost"]
-    #anvend ved følsomhedsanalyse:
-    #model.produktionstid = [data["produktionstid"][v]/60/60*1.4 for v in range(0, len(model.ventilhus))]
-    #anvend ved løsning:
     model.produktionstid = [data["produktionstid"][v]/60/60 for v in range(0, len(model.ventilhus))]
-    #anvend ved følsomhedsanalyse:
-    #model.efterspørgsel=[round(data["demandsommer"][v]*0.6)for v in range(0, len(model.produkter))]
-    #anvend ved løsning:
     model.efterspørgsel = data["demandsommer"]
-    #tilfældig efterspørgselsniveauer:
-    #model.efterspørgsel = [data["demand"][v] * random.randint(1, 1000000) for v in range(0, len(data["demand"]))]
     model.r = data["r"]
-    model.a=data["a"]
+    model.delta=[model.efterspørgsel[v]*model.r[v] for v in range(0, len(model.efterspørgsel))]
+    model.a=data["a2"]
     model.A=data["A"]
     model.w=[data["w"][v]/1000 for v in range(0, len(model.ventilhus))]
     model.K = data["K"]
     model.kfm = data["kfm"]
     model.kfs = data["kfssommer"]/1000
+
+    #No good inequality:
     model.YV1=data["Anvendteventilhuse"]
     model.C1=data["Anvendteventilhuseomvendt"]
     model.YV2=data["Anvendteventilhuse2"]
@@ -58,19 +45,15 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     model.YV8=data["Anvendteventilhuse8"]
     model.C8=data["Anvendteventilhuseomvendt8"]
 
+    #Parametre ved følsomhedsanalyse:
+    #model.efterspørgsel=[round(data["demandsommer"][v]*0.6)for v in range(0, len(model.produkter))]
+    #model.indkøbspris = [data["var_cost"][v]*0.6 for v in range(0, len(model.ventilhus))]
+    #model.opstillingspris = [data["fixed_cost"][v]*0.6 for v in range(0, len(model.ventilhus))]
+    #model.produktionstid = [data["produktionstid"][v]/60/60*0.6 for v in range(0, len(model.ventilhus))]
+
+    #Længder:
     model.ventilhus_længde = range(0, len(model.ventilhus))
     model.produkter_længde = range(0, len(model.produkter))
-    model.delta=[model.efterspørgsel[v]*model.r[v] for v in range(0, len(model.efterspørgsel))]
-    #model.delta=[data["demand"][i]*data["r"] for i in range(len(data["demand"]))] #sunes løsning er blevet replicated men med vores parameternavne
-
-
-    ##Test print
-    #print("Printing weights in kg")
-    #for v in model.ventilhus_længde:
-    #    print(model.w[v])
-    #print("Printing production time in hours")
-    #for v in model.ventilhus_længde:
-    #    print(model.produktionstid[v])
 
     #Variablerne bliver defineret i modellen
     model.x = pyomo.Var(model.ventilhus_længde, model.produkter_længde, within=pyomo.Binary)
@@ -82,36 +65,25 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
             sum(model.delta[p] * model.x[v, p] for p in model.produkter_længde) == model.rho[v]
         )
 
-
-    #Objektfunktionen tilføjes til modellen %%%%%%% Der er nogle produkters brug af ventilhuse som tvinger åbningen af ventilhuse, desværre. Og så kan de produkter som kan bruge det ventilhus som bliver tvunget åbent, lige så godt anvende det såfremt det er billigere at anvende.
-    #Jeg har kørt en random efterspørgsel et par gange og den finder den samme løsning lige meget hvad... Den løsning som den også finder ved 54 ventilhuse... Måske noget som er værd at undersøge hvorfor det er sådan.
-    #Glæder mig til vi får CO2e objektivet med ind over..
-    model.obj=pyomo.Objective(
-        expr=sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
-             +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
-    )
-
-    #Anden objektfunktion tilføjes til modellen
+    #Minimering af omkostninger (1.)
     #model.obj=pyomo.Objective(
-    #    expr=sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
-    #         +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
+    #    expr=sum(model.opstillingspris[v]*model.y[v] + model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
     #)
 
-    #Tredje objektfunktion - omkostinngsobjektfunktionen inkl. CO2 afgifter.
+    #Minimering af CO2e udledninger (2.)
     #model.obj=pyomo.Objective(
-    #    expr=sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
-    #         +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
-    #         +(sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
-    #         +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde))*model.A
+    #    expr=sum(model.rho[v]*model.w[v]*model.kfm + model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
     #)
 
-
-    #Fjerde objektfunktion - omkostninger og CO2e udledninger i en samlet for at lave no good inequality
+    #Minimering af omkostninger inkl. CO2 afgifter (3.)
     #model.obj=pyomo.Objective(
-    #    expr=sum(model.opstillingspris[v]*model.y[v] for v in model.ventilhus_længde)
-    #         +sum(model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
-    #         +sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
-    #         +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
+    #    expr=sum(model.opstillingspris[v]*model.y[v] + model.rho[v]*model.indkøbspris[v] for v in model.ventilhus_længde)
+    #         +(sum(model.rho[v]*model.w[v]*model.kfm + model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde))*model.A
+    #)
+
+    #No good inequality objektfunktion. (4.)
+    #model.obj=pyomo.Objective(
+    #    expr=sum(model.opstillingspris[v]*model.y[v] + model.rho[v]*model.indkøbspris[v] + model.rho[v]*model.w[v]*model.kfm + model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
     #)
 
     #Begræns brugen af ventilhuse så kun ventilhuse som passer til et produkt, kan tildeles til det produkt
@@ -139,11 +111,12 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
         for p in model.produkter_længde:
             model.ventilhusanvendelse.add(expr=model.x[v, p] <= model.y[v])
 
+    #Kontrol af åbning af ventilhustyper (sekundær objektfunktion)
     model.ventilhus2=pyomo.ConstraintList()
     for v in model.ventilhus_længde:
         model.ventilhus2.add(expr=model.rho[v]>=model.y[v])
 
-    #No good inequality (2)
+    #No good inequality - accumulated constraints
     #model.nogoodinequality1=pyomo.Constraint(expr=(sum(model.C1[v]*model.y[v] for v in model.ventilhus_længde))>=1-(sum(model.YV1[v] for v in model.ventilhus_længde)))
     #model.nogoodinequality2=pyomo.Constraint(expr=(sum(model.C2[v]*model.y[v] for v in model.ventilhus_længde))>=1-(sum(model.YV2[v] for v in model.ventilhus_længde)))
     #model.nogoodinequality3=pyomo.Constraint(expr=(sum(model.C3[v]*model.y[v] for v in model.ventilhus_længde))>=1-(sum(model.YV3[v] for v in model.ventilhus_længde)))
@@ -154,6 +127,7 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     #INFEASIBLE: model.nogoodinequality8=pyomo.Constraint(expr=(sum(model.C8[v]*model.y[v] for v in model.ventilhus_længde))>=1-(sum(model.YV8[v] for v in model.ventilhus_længde)))
 
 
+    #Epsilon constraint til løsning af bikriterie problem.
     #model.epsilonconstraint=pyomo.ConstraintList()
     #model.epsilonconstraint.add(expr=(sum(model.rho[v]*model.w[v]*model.kfm for v in model.ventilhus_længde)
     #                                 +sum(model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde))<=617.64)
