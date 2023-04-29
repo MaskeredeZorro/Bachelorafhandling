@@ -81,7 +81,7 @@ def buildModel(data: dict) -> pyomo.ConcreteModel():
     #         +(sum(model.rho[v]*model.w[v]*model.kfm + model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde))*model.A
     #)
 
-    #No good inequality objektfunktion. (4.)
+    #No good inequality objektfunktion (4.)
     #model.obj=pyomo.Objective(
     #    expr=sum(model.opstillingspris[v]*model.y[v] + model.rho[v]*model.indkøbspris[v] + model.rho[v]*model.w[v]*model.kfm + model.rho[v]*model.produktionstid[v]*model.K*model.kfs for v in model.ventilhus_længde)
     #)
